@@ -1,0 +1,16 @@
+# Data (large files, downloaded via scripts/download_data.py)
+data/
+
+# Output (generated)
+output/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+*.egg-info/
+
+# OS
+.DS_Store
+Thumbs.db
