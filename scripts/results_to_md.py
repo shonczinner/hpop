@@ -37,18 +37,19 @@ lines.append(f"| HPOP | {df['hpop'].mean():.1f}% | {mfed_nat['hpop']:.1f}% | {df
 lines.append(f"| Owner-Occ | {df['owner_occ_rate'].mean():.1f}% | {mfed_nat['ownocc']:.1f}% | {df['owner_occ_rate'].mean() - mfed_nat['ownocc']:+.1f} pp |")
 lines.append(f"| Gap (Owner-Occ − HPOP) | {df['gap_pp'].mean():.1f} pp | — | — |")
 lines.append(f"| Rent-to-Income Ratio | {df['rent_to_income'].mean():.3f} | — | — |")
+lines.append(f"| Price-to-Income Ratio | {df['price_to_income'].mean():.1f} | — | — |")
 lines.append("")
 
 # State table with MFED comparison
 lines.append("## State-Level Results\n")
-lines.append("| State | HPOP | HPOP (MFED) | Δ HPOP | Owner-Occ | OwnOcc (MFED) | Δ OwnOcc | Gap | Rent/Income |")
-lines.append("|-------|------|-------------|--------|-----------|---------------|----------|-----|-------------|")
+lines.append("| State | HPOP | HPOP (MFED) | Δ HPOP | Owner-Occ | OwnOcc (MFED) | Δ OwnOcc | Gap | Rent/Income | Price/Income |")
+lines.append("|-------|------|-------------|--------|-----------|---------------|----------|-----|-------------|--------------|")
 
 for _, row in merged.sort_values("hpop_ours", ascending=False).iterrows():
     lines.append(
         f"| {row['state']} | {row['hpop_ours']:.1f} | {row['hpop_mfed']:.1f} | "
         f"{row['delta_hpop']:+.1f} | {row['owner_occ_rate']:.1f} | {row['ownocc']:.1f} | "
-        f"{row['delta_ownocc']:+.1f} | {row['gap_pp']:+.1f} | {row['rent_to_income']:.2f} |"
+        f"{row['delta_ownocc']:+.1f} | {row['gap_pp']:+.1f} | {row['rent_to_income']:.2f} | {row['price_to_income']:.1f} |"
     )
 lines.append("")
 
@@ -63,6 +64,16 @@ lines.append("| Metric | Correlation (r) | MAE (pp) | Mean Bias |")
 lines.append("|--------|-----------------|----------|-----------|")
 lines.append(f"| HPOP | {hpop_corr:.4f} | {hpop_mae:.2f} | {merged['delta_hpop'].mean():+.2f} |")
 lines.append(f"| Owner-Occ | {ownocc_corr:.4f} | {ownocc_mae:.2f} | {merged['delta_ownocc'].mean():+.2f} |")
+lines.append("")
+
+# Gap correlations
+rent_corr = df["rent_to_income"].corr(df["gap_pp"])
+price_corr = df["price_to_income"].corr(df["gap_pp"])
+lines.append("## Gap Correlations\n")
+lines.append("| Cost Metric | r vs Gap |")
+lines.append("|-------------|----------|")
+lines.append(f"| Rent-to-Income (renter) | {rent_corr:.3f} |")
+lines.append(f"| Price-to-Income (owner) | {price_corr:.3f} |")
 lines.append("")
 
 # Housing form summary

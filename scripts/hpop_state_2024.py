@@ -19,9 +19,9 @@ person = pd.concat([
 # ── Load housing data (concatenate a + b splits) ───────
 print("Loading housing data...")
 housing = pd.concat([
-    pd.read_csv(DATA / "psam_husa.csv", usecols=["SERIALNO", "STATE", "TEN", "WGTP", "TYPEHUGQ", "GRNTP", "BLD"],
+    pd.read_csv(DATA / "psam_husa.csv", usecols=["SERIALNO", "STATE", "TEN", "WGTP", "TYPEHUGQ", "GRNTP", "BLD", "VALP"],
                 dtype={"SERIALNO": str}),
-    pd.read_csv(DATA / "psam_husb.csv", usecols=["SERIALNO", "STATE", "TEN", "WGTP", "TYPEHUGQ", "GRNTP", "BLD"],
+    pd.read_csv(DATA / "psam_husb.csv", usecols=["SERIALNO", "STATE", "TEN", "WGTP", "TYPEHUGQ", "GRNTP", "BLD", "VALP"],
                 dtype={"SERIALNO": str}),
 ], ignore_index=True)
 
@@ -110,10 +110,41 @@ print(form_wide[["STATE", "pct_multifamily", "pct_singlefamily", "sf_detached", 
                   "small_mf", "med_mf", "large_mf", "mobile"]].round(1).to_string(index=False))
 
 # ══════════════════════════════════════════════════════════
+# PRICE-TO-INCOME RATIO (homeowners only)
+# ══════════════════════════════════════════════════════════
+print("Computing price-to-income ratio...")
+# Merge person + housing for owners with property value
+owners = person.merge(
+    housing[["SERIALNO", "STATE", "TEN", "TYPEHUGQ", "VALP"]],
+    on=["SERIALNO", "STATE"], how="left"
+)
+# TEN in {1,2} = owner-occupied, VALP = property value
+owners = owners[
+    (owners["TYPEHUGQ"] == 1) &
+    (owners["TEN"].isin([1, 2])) &
+    (owners["RELSHIPP"].isin([20, 21, 22])) &
+    (owners["AGEP"] >= 18) &
+    (owners["VALP"].notna()) &
+    (owners["VALP"] > 0) &
+    (owners["PINCP"].notna()) &
+    (owners["PINCP"] > 0)
+].copy()
+
+price_income_by_state = owners.groupby("STATE").apply(lambda g: pd.Series({
+    "avg_property_value": (g["PWGTP"] * g["VALP"]).sum() / g["PWGTP"].sum(),
+    "avg_owner_income": (g["PWGTP"] * g["PINCP"]).sum() / g["PWGTP"].sum(),
+})).reset_index()
+price_income_by_state["price_to_income"] = (
+    price_income_by_state["avg_property_value"] / price_income_by_state["avg_owner_income"]
+)
+
+# ══════════════════════════════════════════════════════════
 # COMBINE & OUTPUT
 # ══════════════════════════════════════════════════════════
 state = hpop_by_state.merge(ownocc_by_state, on="STATE", how="outer")
 state = state.merge(rent_income_by_state[["STATE", "rent_to_income", "avg_annual_rent", "avg_personal_income"]],
+                    on="STATE", how="left")
+state = state.merge(price_income_by_state[["STATE", "price_to_income", "avg_property_value", "avg_owner_income"]],
                     on="STATE", how="left")
 state = state.merge(form_wide[["STATE", "pct_multifamily", "pct_singlefamily", "sf_detached", "sf_attached",
                                "small_mf", "med_mf", "large_mf", "mobile"]],
@@ -134,12 +165,13 @@ fips = {1:"AL",2:"AK",4:"AZ",5:"AR",6:"CA",8:"CO",9:"CT",10:"DE",11:"DC",
 state["state"] = state["STATE"].map(fips)
 
 # Save
-out_cols = ["state", "hpop", "owner_occ_rate", "gap_pp", "rent_to_income", "avg_annual_rent", "avg_personal_income",
+out_cols = ["state", "hpop", "owner_occ_rate", "gap_pp", "rent_to_income", "price_to_income",
+            "avg_annual_rent", "avg_personal_income", "avg_property_value", "avg_owner_income",
             "pct_multifamily", "pct_singlefamily", "sf_detached", "sf_attached", "small_mf", "med_mf", "large_mf", "mobile"]
 state[out_cols].to_csv(OUT / "hpop_by_state_2024.csv", index=False)
 
 # Print
-print(state[["state", "hpop", "owner_occ_rate", "gap_pp", "rent_to_income"]].sort_values("hpop", ascending=False).to_string(index=False))
+print(state[["state", "hpop", "owner_occ_rate", "gap_pp", "rent_to_income", "price_to_income"]].sort_values("hpop", ascending=False).to_string(index=False))
 
 # National
 nat_hpop = (df["PWGTP"] * df["is_homeowner"]).sum() / df["PWGTP"].sum() * 100
