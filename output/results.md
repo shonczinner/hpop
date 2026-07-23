@@ -8,6 +8,8 @@
 | Owner-Occ | 67.1% | 65.3% | +1.8 pp |
 | Gap (Owner-Occ − HPOP) | -9.5 pp | — | — |
 | Rent-to-Income Ratio | 0.457 | — | — |
+| Rent-to-Income 18-64 | 0.456 | — | — |
+| Avg Adult Income | $57,459 | — | — |
 | Price-to-Income Ratio | 5.9 | — | — |
 
 ## State-Level Results
@@ -75,16 +77,45 @@
 
 ## Gap Correlations
 
-| Cost Metric | r vs Gap |
-|-------------|----------|
-| Rent-to-Income (renter) | -0.821 |
-| Price-to-Income (owner) | -0.465 |
+| Variable | r vs Neg-Gap |
+|----------|--------------|
+| Rent-to-Income (renter 18+) | 0.821 |
+| Rent-to-Income (renter 18-64) | 0.827 |
+| Price-to-Income (owner) | 0.465 |
+| Multifamily Share | -0.039 |
+| Avg Adult Income | -0.068 |
+| Owner-Occ Rate | 0.038 |
+
+## Rent-to-Income: All Adults vs Ages 18-64
+
+![Rent-to-Income 18+](gap_vs_rent_to_income.png)
+
+![Rent-to-Income 18-64](gap_vs_rent_to_income_18_64.png)
+
+Correlation with gap (neg-gap): all adults r = 0.821, ages 18-64 r = 0.827
+
 
 ## Housing Form by State
 
+![Multifamily Share vs Gap](state_multifamily_vs_gap.png)
+
+## Average Income vs Gap
+
+![Adult Income vs Gap](gap_vs_adult_income.png)
+
+Correlation with gap: r = -0.068
+
+
+## Traditional Homeownership vs Gap
+
+![Owner-Occ vs Gap](gap_vs_owner_occ.png)
+
+Correlation with gap: r = 0.038
+
+
 | State | Single-Family | Multifamily | Mobile/Other |
 |-------|---------------|-------------|--------------|
-| DC | 39.6% | 60.4% | 0.0% |
+| DC | 39.6% | 60.4% | -0.0% |
 | NY | 51.7% | 46.5% | 1.8% |
 | MA | 62.2% | 37.1% | 0.7% |
 | RI | 66.4% | 33.0% | 0.6% |
@@ -145,5 +176,9 @@
 2. **Gap varies by state** — ranges from -1.0 pp (ND) to -17.7 pp (HI), driven by
    housing costs, household composition, and prevalence of adult co-residents.
 
-3. **Rent burden is the strongest correlate** of the gap (r = 0.82), suggesting that
+3. **Rent burden is the strongest correlate** of the gap (r = 0.821), suggesting that
    housing affordability drives the divergence between owner-occ and HPOP.
+
+4. **Multifamily share vs gap at state level** (r = -0.039) — the relationship is 
+   weaker across states than within metros (MS PUMAs r = -0.185, NYC PUMAs r = -0.834),
+   suggesting other state-level factors (household composition, costs) dominate.

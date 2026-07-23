@@ -1,74 +1,162 @@
+#!/usr/bin/env python3
+"""Plot HPOP gap vs cost metrics (rent-to-income and price-to-income)."""
 import pandas as pd
-import matplotlib.pyplot as plt
-import matplotlib.ticker as mticker
 import numpy as np
-from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
-OUT = ROOT / "output"
-
-df = pd.read_csv(OUT / "hpop_by_state_2024.csv")
-
-fig, ax = plt.subplots(figsize=(10, 7))
-
-df["neg_gap"] = -df["gap_pp"]
-
-ax.scatter(df["rent_to_income"], df["neg_gap"], s=50, c="#D4A843", edgecolors="#333", linewidths=0.5, zorder=3)
-
-for _, row in df.iterrows():
-    ax.annotate(row["state"], (row["rent_to_income"], row["neg_gap"]),
-                fontsize=7, ha="center", va="bottom", xytext=(0, 5),
-                textcoords="offset points")
-
-# Trend line
-z = np.polyfit(df["rent_to_income"], df["neg_gap"], 1)
-p = np.poly1d(z)
-x_line = np.linspace(df["rent_to_income"].min() - 0.01, df["rent_to_income"].max() + 0.01, 100)
-ax.plot(x_line, p(x_line), "--", color="#888", linewidth=1, zorder=2)
-
-corr = df["rent_to_income"].corr(df["neg_gap"])
-ax.text(0.02, 0.98, f"r = {corr:.3f}", transform=ax.transAxes,
-        fontsize=10, verticalalignment="top",
-        bbox=dict(boxstyle="round,pad=0.3", facecolor="white", edgecolor="#ccc"))
-
-ax.set_xlabel("Rent-to-Income Ratio (avg annual rent / avg renter income)", fontsize=11)
-ax.set_ylabel("Owner-Occ Rate − HPOP (percentage points)", fontsize=11)
-ax.set_title("Housing Costs vs. Homeownership Measure Gap by State (2024)", fontsize=13, fontweight="bold")
-ax.xaxis.set_major_formatter(mticker.FormatStrFormatter("%.2f"))
-ax.grid(True, alpha=0.3)
-
-fig.tight_layout()
-fig.savefig(OUT / "gap_vs_rent_to_income.png", dpi=150)
-print(f"Saved {OUT / 'gap_vs_rent_to_income.png'}")
-
-# ── Plot 2: Gap vs Price-to-Income ───────────────────────
-fig2, ax2 = plt.subplots(figsize=(10, 7))
-
-ax2.scatter(df["price_to_income"], df["neg_gap"], s=50, c="#D4A843", edgecolors="#333", linewidths=0.5, zorder=3)
-
-for _, row in df.iterrows():
-    ax2.annotate(row["state"], (row["price_to_income"], row["neg_gap"]),
-                fontsize=7, ha="center", va="bottom", xytext=(0, 5),
-                textcoords="offset points")
-
-z2 = np.polyfit(df["price_to_income"], df["neg_gap"], 1)
-p2 = np.poly1d(z2)
-x2 = np.linspace(df["price_to_income"].min() - 0.5, df["price_to_income"].max() + 0.5, 100)
-ax2.plot(x2, p2(x2), "--", color="#888", linewidth=1, zorder=2)
-
-corr2 = df["price_to_income"].corr(df["neg_gap"])
-ax2.text(0.02, 0.98, f"r = {corr2:.3f}", transform=ax2.transAxes,
-        fontsize=10, verticalalignment="top",
-        bbox=dict(boxstyle="round,pad=0.3", facecolor="white", edgecolor="#ccc"))
-
-ax2.set_xlabel("Price-to-Income Ratio (avg property value / avg owner income)", fontsize=11)
-ax2.set_ylabel("Owner-Occ Rate − HPOP (percentage points)", fontsize=11)
-ax2.set_title("Home Values vs. Homeownership Measure Gap by State (2024)", fontsize=13, fontweight="bold")
-ax2.xaxis.set_major_formatter(mticker.FormatStrFormatter("%.1f"))
-ax2.grid(True, alpha=0.3)
-
-fig2.tight_layout()
-fig2.savefig(OUT / "gap_vs_price_to_income.png", dpi=150)
-print(f"Saved {OUT / 'gap_vs_price_to_income.png'}")
+from scripts.constants import (
+    PlotStyle, FileNames, OUT_DIR
+)
+from scripts.utils import load_state_data
+from scripts.plot_utils import (
+    setup_figure, style_scatter, add_fit_line, add_correlation_text,
+    annotate_points, set_axis_labels, save_figure
+)
 
 
+def main():
+    df = load_state_data()
+    df["neg_gap"] = -df["gap_pp"]
+
+    # ── Plot 1: Gap vs Rent-to-Income ──
+    fig, ax = setup_figure()
+
+    style_scatter(ax, df["rent_to_income"].values, df["neg_gap"].values, "scatter_main", "State")
+    annotate_points(ax, df, "rent_to_income", "neg_gap", "state",
+                    fontsize=PlotStyle.FONT_SIZES["annotation"])
+
+    r = add_fit_line(ax, df["rent_to_income"].values, df["neg_gap"].values, "fit_line", x_pad=0.05)
+    add_correlation_text(ax, {"State": r})
+
+    set_axis_labels(
+        ax,
+        "Rent-to-Income Ratio (avg annual rent / avg renter income)",
+        "Owner-Occ − HPOP Rate (percentage points)",
+        "Housing Costs vs. Homeownership Measure Gap by State (2024)",
+        x_format="%.2f",
+    )
+
+    save_figure(fig, FileNames.PLOT_GAP_RENT, out_dir=OUT_DIR)
+
+    # ── Plot 2: Gap vs Price-to-Income ──
+    fig2, ax2 = setup_figure()
+
+    style_scatter(ax2, df["price_to_income"].values, df["neg_gap"].values, "scatter_main", "State")
+    annotate_points(ax2, df, "price_to_income", "neg_gap", "state",
+                    fontsize=PlotStyle.FONT_SIZES["annotation"])
+
+    r2 = add_fit_line(ax2, df["price_to_income"].values, df["neg_gap"].values, "fit_line", x_pad=0.5)
+    add_correlation_text(ax2, {"State": r2})
+
+    set_axis_labels(
+        ax2,
+        "Price-to-Income Ratio (avg property value / avg owner income)",
+        "Owner-Occ − HPOP Rate (percentage points)",
+        "Home Values vs. Homeownership Measure Gap by State (2024)",
+        x_format="%.1f",
+    )
+
+    save_figure(fig2, FileNames.PLOT_GAP_PRICE, out_dir=OUT_DIR)
+
+    # ── Plot 3: Gap vs Multifamily Share (state level) ──
+    fig3, ax3 = setup_figure()
+
+    style_scatter(ax3, df["pct_multifamily"].values, df["neg_gap"].values, "scatter_main", "State")
+    annotate_points(ax3, df, "pct_multifamily", "neg_gap", "state",
+                    fontsize=PlotStyle.FONT_SIZES["annotation"])
+
+    r3 = add_fit_line(ax3, df["pct_multifamily"].values, df["neg_gap"].values, "fit_line")
+    add_correlation_text(ax3, {"State": r3})
+
+    set_axis_labels(
+        ax3,
+        "Multifamily Share (% of occupied units)",
+        "Owner-Occ − HPOP Rate (percentage points)",
+        "Housing Form vs. Homeownership Measure Gap by State (2024)",
+        x_format=PlotStyle.X_FORMAT_PCT,
+    )
+
+    save_figure(fig3, FileNames.PLOT_STATE_MF_VS_GAP, out_dir=OUT_DIR)
+
+    # ── Plot 4: Gap vs Rent-to-Income 18-64 (prime working age) ──
+    fig4, ax4 = setup_figure()
+
+    style_scatter(ax4, df["rent_to_income_18_64"].values, df["neg_gap"].values, "scatter_main", "State")
+    annotate_points(ax4, df, "rent_to_income_18_64", "neg_gap", "state",
+                    fontsize=PlotStyle.FONT_SIZES["annotation"])
+
+    r4 = add_fit_line(ax4, df["rent_to_income_18_64"].values, df["neg_gap"].values, "fit_line", x_pad=0.05)
+    add_correlation_text(ax4, {"State": r4})
+
+    set_axis_labels(
+        ax4,
+        "Rent-to-Income Ratio 18-64 (avg annual rent / avg renter income)",
+        "Owner-Occ − HPOP Rate (percentage points)",
+        "Housing Costs vs. Homeownership Measure Gap by State (2024)\nRenters Ages 18-64",
+        x_format="%.2f",
+    )
+
+    save_figure(fig4, FileNames.PLOT_GAP_RENT_18_64, out_dir=OUT_DIR)
+
+    # ── Plot 5: Gap vs All-Adult Income (unfiltered by tenure) ──
+    fig5, ax5 = setup_figure()
+
+    style_scatter(ax5, df["avg_adult_income"].values, df["neg_gap"].values, "scatter_main", "State")
+    annotate_points(ax5, df, "avg_adult_income", "neg_gap", "state",
+                    fontsize=PlotStyle.FONT_SIZES["annotation"])
+
+    r5 = add_fit_line(ax5, df["avg_adult_income"].values, df["neg_gap"].values, "fit_line", x_pad=5000)
+    add_correlation_text(ax5, {"State": r5})
+
+    set_axis_labels(
+        ax5,
+        "Average Annual Personal Income (All Adults 18+)",
+        "Owner-Occ − HPOP Rate (percentage points)",
+        "Average Income vs. Homeownership Measure Gap by State (2024)",
+        x_format="$%.0f",
+    )
+
+    save_figure(fig5, FileNames.PLOT_GAP_VS_INCOME, out_dir=OUT_DIR)
+
+    # ── Plot 6: Gap vs Owner-Occ (traditional homeownership rate) ──
+    fig6, ax6 = setup_figure()
+
+    style_scatter(ax6, df["owner_occ_rate"].values, df["neg_gap"].values, "scatter_main", "State")
+    annotate_points(ax6, df, "owner_occ_rate", "neg_gap", "state",
+                    fontsize=PlotStyle.FONT_SIZES["annotation"])
+
+    r6 = add_fit_line(ax6, df["owner_occ_rate"].values, df["neg_gap"].values, "fit_line", x_pad=2)
+    add_correlation_text(ax6, {"State": r6})
+
+    set_axis_labels(
+        ax6,
+        "Owner-Occupancy Rate (% of occupied units)",
+        "Owner-Occ − HPOP Rate (percentage points)",
+        "Traditional Homeownership vs. Measure Gap by State (2024)",
+        x_format=PlotStyle.X_FORMAT_PCT,
+    )
+
+    save_figure(fig6, FileNames.PLOT_GAP_VS_OWNER_OCC, out_dir=OUT_DIR)
+
+    # ── Plot 7: Owner-Occ vs Multifamily Share (state level) ──
+    fig7, ax7 = setup_figure()
+
+    style_scatter(ax7, df["pct_multifamily"].values, df["owner_occ_rate"].values, "scatter_main", "State")
+    annotate_points(ax7, df, "pct_multifamily", "owner_occ_rate", "state",
+                    fontsize=PlotStyle.FONT_SIZES["annotation"])
+
+    r7 = add_fit_line(ax7, df["pct_multifamily"].values, df["owner_occ_rate"].values, "fit_line")
+    add_correlation_text(ax7, {"State": r7})
+
+    set_axis_labels(
+        ax7,
+        "Multifamily Share (% of occupied units)",
+        "Owner-Occupancy Rate (% of occupied units)",
+        "Homeownership vs. Multifamily Share by State (2024)",
+        x_format=PlotStyle.X_FORMAT_PCT,
+    )
+
+    save_figure(fig7, FileNames.PLOT_OWNER_OCC_VS_MF, out_dir=OUT_DIR)
+
+
+if __name__ == "__main__":
+    main()
