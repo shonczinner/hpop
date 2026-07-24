@@ -29,14 +29,8 @@ def load_pums_data(
     Returns:
         Tuple of (person_df, housing_df)
     """
-    person_cols = person_cols or [
-        PUMS.SERIALNO, PUMS.STATE, PUMS.RELSHIPP, PUMS.PWGTP,
-        PUMS.AGEP, PUMS.PINCP,
-    ]
-    housing_cols = housing_cols or [
-        PUMS.SERIALNO, PUMS.STATE, PUMS.TEN, PUMS.WGTP,
-        PUMS.TYPEHUGQ, PUMS.GRNTP, PUMS.BLD, PUMS.VALP,
-    ]
+    person_cols = person_cols or PUMS.PERSON_COLS
+    housing_cols = housing_cols or PUMS.HOUSING_COLS
 
     person = pd.concat([
         pd.read_csv(DATA_DIR / "psam_pusa.csv", usecols=person_cols, dtype={PUMS.SERIALNO: str}),
@@ -231,7 +225,7 @@ def compute_hpop_metrics(
 
     # ── Rent-to-income (adult renters 18+, all adults) ──
     renters = merge_housing(person, housing, [
-        PUMS.TEN, PUMS.TYPEHUGQ, PUMS.GRNTP,
+        PUMS.TEN, PUMS.TYPEHUGQ, PUMS.GRNTP, PUMS.HINCP,
     ])
     renters = filter_housing_units(renters)
     renters = filter_renters(renters)
@@ -248,6 +242,9 @@ def compute_hpop_metrics(
             "avg_annual_rent": weighted_mean(g, "annual_rent"),
             "avg_personal_income": weighted_mean(g, PUMS.PINCP),
             "rent_to_income": compute_rent_to_income(g),
+            "rent_to_income_household": compute_rent_to_income(
+                g[g[PUMS.HINCP].notna() & (g[PUMS.HINCP] > 0)], income_col=PUMS.HINCP
+            ),
         })
     ).reset_index()
 
@@ -259,6 +256,9 @@ def compute_hpop_metrics(
             "avg_annual_rent_18_64": weighted_mean(g, "annual_rent"),
             "avg_renter_income_18_64": weighted_mean(g, PUMS.PINCP),
             "rent_to_income_18_64": compute_rent_to_income(g),
+            "rent_to_income_household_18_64": compute_rent_to_income(
+                g[g[PUMS.HINCP].notna() & (g[PUMS.HINCP] > 0)], income_col=PUMS.HINCP
+            ),
         })
     ).reset_index()
 

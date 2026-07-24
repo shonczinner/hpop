@@ -81,6 +81,12 @@ def compute_puma_metrics(
         n_adults = int(puma_adults[PUMS.PWGTP].sum())
         n_occupied = int(puma_hu_occ[PUMS.WGTP].sum())
 
+        puma_rental_adults = puma_adults[puma_adults[PUMS.TEN] == Codes.RENTER_OCCUPIED]
+        n_adults_rental = int(puma_rental_adults[PUMS.PWGTP].sum())
+
+        puma_rental_units = puma_hu_occ[puma_hu_occ[PUMS.TEN] == Codes.RENTER_OCCUPIED]
+        n_rental_units = int(puma_rental_units[PUMS.WGTP].sum())
+
         name = get_puma_name(int(puma), region_name)
 
         results.append({
@@ -90,6 +96,8 @@ def compute_puma_metrics(
             "name": name,
             "n_adults": n_adults,
             "n_occupied_units": n_occupied,
+            "n_adults_rental": n_adults_rental,
+            "n_rental_units": n_rental_units,
             "hpop": round(float(row["hpop"]), 4),
             "owner_occ_rate": round(float(row["owner_occ_rate"]), 4),
             "gap_pp": round(float(row["gap_pp"]), 4),
@@ -97,6 +105,8 @@ def compute_puma_metrics(
             "mean_rent_18_64": round(float(row["avg_annual_rent_18_64"]), 2) if pd.notna(row.get("avg_annual_rent_18_64")) else np.nan,
             "rent_to_income": round(float(row["rent_to_income"] * 100), 2) if pd.notna(row.get("rent_to_income")) else np.nan,
             "rent_to_income_18_64": round(float(row["rent_to_income_18_64"] * 100), 2) if pd.notna(row.get("rent_to_income_18_64")) else np.nan,
+            "rent_to_income_household": round(float(row["rent_to_income_household"] * 100), 2) if pd.notna(row.get("rent_to_income_household")) else np.nan,
+            "rent_to_income_household_18_64": round(float(row["rent_to_income_household_18_64"] * 100), 2) if pd.notna(row.get("rent_to_income_household_18_64")) else np.nan,
             "mean_adult_income": round(float(row["avg_adult_income"]), 2) if pd.notna(row.get("avg_adult_income")) else np.nan,
             "sf_detached_share": round(float(row.get("sf_detached", 0)), 2),
             "multifamily_share": round(float(row.get("pct_multifamily", 0)), 2),

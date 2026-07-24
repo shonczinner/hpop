@@ -33,6 +33,41 @@ def main() -> pd.DataFrame:
     # Exclude Puerto Rico
     state = state[state[PUMS.STATE] != Geo.PR_FIPS].copy()
 
+    # Add population counts
+    df = merge_person_housing(person, housing, housing_cols=[
+        PUMS.TEN, PUMS.TYPEHUGQ, PUMS.BLD,
+    ])
+    df = filter_housing_units(df)
+    df = filter_adults(df)
+    n_adults = df.groupby(PUMS.STATE).apply(
+        lambda g: pd.Series({"n_adults": g[PUMS.PWGTP].sum()})
+    ).reset_index()
+    state = state.merge(n_adults, on=PUMS.STATE, how="left")
+
+    hu = housing[housing[PUMS.TEN].notna()].copy()
+    n_occ = hu.groupby(PUMS.STATE).apply(
+        lambda g: pd.Series({"n_occupied_units": g[PUMS.WGTP].sum()})
+    ).reset_index()
+    state = state.merge(n_occ, on=PUMS.STATE, how="left")
+
+    # Add rental-specific population counts
+    df_rental = merge_person_housing(person, housing, housing_cols=[
+        PUMS.TEN, PUMS.TYPEHUGQ,
+    ])
+    df_rental = filter_housing_units(df_rental)
+    df_rental = filter_renters(df_rental)
+    df_rental = filter_adults(df_rental)
+    n_adults_rental = df_rental.groupby(PUMS.STATE).apply(
+        lambda g: pd.Series({"n_adults_rental": g[PUMS.PWGTP].sum()})
+    ).reset_index()
+    state = state.merge(n_adults_rental, on=PUMS.STATE, how="left")
+
+    hu_rental = housing[housing[PUMS.TEN] == Codes.RENTER_OCCUPIED].copy()
+    n_rental_units = hu_rental.groupby(PUMS.STATE).apply(
+        lambda g: pd.Series({"n_rental_units": g[PUMS.WGTP].sum()})
+    ).reset_index()
+    state = state.merge(n_rental_units, on=PUMS.STATE, how="left")
+
     # Add state abbreviations
     state = add_state_abbreviation(state)
 

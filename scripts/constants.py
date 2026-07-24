@@ -23,6 +23,7 @@ class PUMS:
     PWGTP = "PWGTP"
     AGEP = "AGEP"
     PINCP = "PINCP"
+    HINCP = "HINCP"
     TEN = "TEN"
     WGTP = "WGTP"
     TYPEHUGQ = "TYPEHUGQ"
@@ -32,7 +33,7 @@ class PUMS:
     PUMA = "PUMA"
 
     PERSON_COLS = [SERIALNO, STATE, RELSHIPP, PWGTP, AGEP, PINCP]
-    HOUSING_COLS = [SERIALNO, STATE, TEN, WGTP, TYPEHUGQ, GRNTP, BLD, VALP]
+    HOUSING_COLS = [SERIALNO, STATE, TEN, WGTP, TYPEHUGQ, GRNTP, BLD, VALP, HINCP]
     PUMA_PERSON_COLS = PERSON_COLS + [PUMA]
     PUMA_HOUSING_COLS = HOUSING_COLS + [PUMA]
     MERGE_KEYS = [SERIALNO, STATE]
@@ -193,6 +194,8 @@ class OutputColumns:
         "gap_pp",
         "rent_to_income",
         "rent_to_income_18_64",
+        "rent_to_income_household",
+        "rent_to_income_household_18_64",
         "price_to_income",
         "avg_annual_rent",
         "avg_personal_income",
@@ -206,6 +209,10 @@ class OutputColumns:
         "sf_detached",
         "sf_attached",
         "mobile",
+        "n_adults",
+        "n_occupied_units",
+        "n_adults_rental",
+        "n_rental_units",
     ]
 
     PUMA_LEVEL = [
@@ -215,6 +222,8 @@ class OutputColumns:
         "name",
         "n_adults",
         "n_occupied_units",
+        "n_adults_rental",
+        "n_rental_units",
         "hpop",
         "owner_occ_rate",
         "gap_pp",
@@ -222,6 +231,8 @@ class OutputColumns:
         "mean_rent_18_64",
         "rent_to_income",
         "rent_to_income_18_64",
+        "rent_to_income_household",
+        "rent_to_income_household_18_64",
         "mean_adult_income",
         "sf_detached_share",
         "multifamily_share",
@@ -291,3 +302,23 @@ class FileNames:
     PLOT_PUMA_GAP_VS_OWNER_OCC = "puma_gap_vs_owner_occ.png"
     PLOT_PUMA_OWNER_OCC_VS_MF = "puma_owner_occ_vs_multifamily.png"
     PLOT_PUMA_GAP_VS_INCOME = "puma_gap_vs_adult_income.png"
+    PLOT_GAP_VS_N_ADULTS = "gap_vs_n_adults.png"
+    PLOT_GAP_VS_N_OCCUPIED = "gap_vs_n_occupied.png"
+    PLOT_GAP_VS_ADULTS_PER_UNIT = "gap_vs_adults_per_unit.png"
+    PLOT_ADULTS_PER_UNIT_VS_RENT_TO_INCOME = "adults_per_unit_vs_rent_to_income.png"
+    PLOT_RENTAL_ADULTS_PER_UNIT_VS_RENT = "rental_adults_per_unit_vs_rent_to_income.png"
+    PLOT_ADULTS_PER_UNIT_VS_MULTIFAMILY = "adults_per_unit_vs_multifamily.png"
+    PLOT_PUMA_GAP_VS_ADULTS_PER_UNIT = "puma_gap_vs_adults_per_unit.png"
+    PLOT_PUMA_ADULTS_PER_UNIT_VS_RENT = "puma_adults_per_unit_vs_rent_to_income.png"
+    PLOT_PUMA_RENTAL_ADULTS_PER_UNIT_VS_RENT = "puma_rental_adults_per_unit_vs_rent_to_income.png"
+    PLOT_PUMA_ADULTS_PER_UNIT_VS_MULTIFAMILY = "puma_adults_per_unit_vs_multifamily.png"
+    PLOT_RENT_TO_INCOME_VS_MULTIFAMILY = "rent_to_income_vs_multifamily.png"
+    PLOT_PUMA_RENT_TO_INCOME_VS_MULTIFAMILY = "puma_rent_to_income_vs_multifamily.png"
+    PLOT_GAP_VS_RENT_HOUSEHOLD = "gap_vs_rent_to_income_household.png"
+    PLOT_PUMA_RENT_HOUSEHOLD_VS_GAP = "puma_rent_to_income_household_vs_gap.png"
+    PLOT_GAP_VS_RENT_HOUSEHOLD_18_64 = "gap_vs_rent_to_income_household_18_64.png"
+    PLOT_PUMA_RENT_HOUSEHOLD_18_64_VS_GAP = "puma_rent_to_income_household_18_64_vs_gap.png"
+    PLOT_RENTAL_ADULTS_PER_UNIT_VS_RENT_HOUSEHOLD = "rental_adults_per_unit_vs_rent_to_income_household.png"
+    PLOT_PUMA_RENTAL_ADULTS_PER_UNIT_VS_RENT_HOUSEHOLD = "puma_rental_adults_per_unit_vs_rent_to_income_household.png"
+    PLOT_RENT_HOUSEHOLD_VS_MULTIFAMILY = "rent_to_income_household_vs_multifamily.png"
+    PLOT_PUMA_RENT_HOUSEHOLD_VS_MULTIFAMILY = "puma_rent_to_income_household_vs_multifamily.png"

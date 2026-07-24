@@ -16,7 +16,7 @@ def run(module: str) -> None:
         cwd=str(ROOT),
     )
     if result.returncode != 0:
-        print(f"\nFAILED: {script}")
+        print(f"\nFAILED: {module}")
         sys.exit(1)
 
 
