@@ -108,6 +108,8 @@ def compute_puma_metrics(
             "rent_to_income_household": round(float(row["rent_to_income_household"] * 100), 2) if pd.notna(row.get("rent_to_income_household")) else np.nan,
             "rent_to_income_household_18_64": round(float(row["rent_to_income_household_18_64"] * 100), 2) if pd.notna(row.get("rent_to_income_household_18_64")) else np.nan,
             "mean_adult_income": round(float(row["avg_adult_income"]), 2) if pd.notna(row.get("avg_adult_income")) else np.nan,
+            "homeowner_median_income": round(float(row["homeowner_median_income"]), 2) if pd.notna(row.get("homeowner_median_income")) else np.nan,
+            "renter_median_income": round(float(row["renter_median_income"]), 2) if pd.notna(row.get("renter_median_income")) else np.nan,
             "sf_detached_share": round(float(row.get("sf_detached", 0)), 2),
             "multifamily_share": round(float(row.get("pct_multifamily", 0)), 2),
         })

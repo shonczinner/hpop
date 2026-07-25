@@ -177,17 +177,16 @@ def validate_output_files_exist():
         "hpop_by_state_2024.csv",
         "results.md",
         "gap_vs_rent_to_income.png",
-        "gap_vs_rent_to_income_18_64.png",
-        "gap_vs_price_to_income.png",
+        "owner_occ_vs_multifamily.png",
+        "gap_vs_adults_per_unit.png",
+        "adults_per_unit_vs_rent_to_income.png",
         "puma/ms_puma_metrics.csv",
         "puma/nyc_puma_metrics.csv",
         "puma/puma_results.md",
-        "puma/compare_multifamily_vs_gap.png",
         "puma/puma_rent_to_income_vs_gap.png",
-        "puma/puma_rent_to_income_18_64_vs_gap.png",
-    "puma/puma_gap_vs_adult_income.png",
-        "state_multifamily_vs_gap.png",
-    "gap_vs_adult_income.png",
+        "puma/puma_owner_occ_vs_multifamily.png",
+        "puma/puma_gap_vs_adults_per_unit.png",
+        "puma/puma_adults_per_unit_vs_rent_to_income.png",
     ]
 
     missing = []

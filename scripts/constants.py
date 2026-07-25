@@ -23,6 +23,7 @@ class PUMS:
     PWGTP = "PWGTP"
     AGEP = "AGEP"
     PINCP = "PINCP"
+    POVPIP = "POVPIP"
     HINCP = "HINCP"
     TEN = "TEN"
     WGTP = "WGTP"
@@ -32,7 +33,7 @@ class PUMS:
     VALP = "VALP"
     PUMA = "PUMA"
 
-    PERSON_COLS = [SERIALNO, STATE, RELSHIPP, PWGTP, AGEP, PINCP]
+    PERSON_COLS = [SERIALNO, STATE, RELSHIPP, PWGTP, AGEP, PINCP, POVPIP]
     HOUSING_COLS = [SERIALNO, STATE, TEN, WGTP, TYPEHUGQ, GRNTP, BLD, VALP, HINCP]
     PUMA_PERSON_COLS = PERSON_COLS + [PUMA]
     PUMA_HOUSING_COLS = HOUSING_COLS + [PUMA]
@@ -45,12 +46,20 @@ class Codes:
     OWNED_WITH_MORTGAGE = 1
     OWNED_FREE_CLEAR = 2
     RENTER_OCCUPIED = 3
+    OCCUPIED_WITHOUT_RENT = 4
+    RENTER_CODES = {RENTER_OCCUPIED, OCCUPIED_WITHOUT_RENT}
     OWNER_OCCUPIED = {OWNED_WITH_MORTGAGE, OWNED_FREE_CLEAR}
 
     HOUSEHOLDER = 20
     SPOUSE = 21
-    PARTNER = 22
-    HOUSEHOLDER_SPOUSE_PARTNER = {HOUSEHOLDER, SPOUSE, PARTNER}
+    UNMARRIED_PARTNER = 22
+    BIOLOGICAL_CHILD = 23
+    ADOPTED_CHILD = 24
+    # Per replication.md: homeowner RELSHIPP codes are 20-24
+    # 20=reference person, 21=spouse, 22=unmarried partner,
+    # 23=biological child, 24=adopted child
+    HOMEOWNER_RELSHIPP = {HOUSEHOLDER, SPOUSE, UNMARRIED_PARTNER, BIOLOGICAL_CHILD, ADOPTED_CHILD}
+    ADULT_AGE = 18
 
     MOBILE_HOME = 1
     SF_DETACHED = 2
@@ -202,6 +211,8 @@ class OutputColumns:
         "avg_annual_rent_18_64",
         "avg_renter_income_18_64",
         "avg_adult_income",
+        "homeowner_median_income",
+        "renter_median_income",
         "avg_property_value",
         "avg_owner_income",
         "pct_multifamily",
@@ -234,6 +245,8 @@ class OutputColumns:
         "rent_to_income_household",
         "rent_to_income_household_18_64",
         "mean_adult_income",
+        "homeowner_median_income",
+        "renter_median_income",
         "sf_detached_share",
         "multifamily_share",
     ]

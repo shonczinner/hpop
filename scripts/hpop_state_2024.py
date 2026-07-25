@@ -5,7 +5,7 @@ import numpy as np
 
 from scripts.constants import (
     PUMS, Codes, Geo, OutputColumns, FileNames,
-    DATA_DIR, OUT_DIR
+    ROOT, DATA_DIR, OUT_DIR
 )
 from scripts.utils import (
     load_pums_data,
@@ -74,7 +74,36 @@ def main() -> pd.DataFrame:
     # Save
     save_output(state, FileNames.STATE_CSV, columns=OutputColumns.STATE_LEVEL)
 
+    # ── Validation against Minneapolis Fed ──
+    try:
+        mfed = pd.read_excel(
+            DATA_DIR / "mfed_hpop.xlsx", sheet_name="hpop_oown_state"
+        )
+        mfed = mfed[mfed["year"] == 2024].copy()
+        mfed["state"] = mfed["fips"].map(Geo.FIPS_TO_STATE)
+        mfed = mfed[mfed["state"].notna()].copy()
+
+        merged = state.merge(
+            mfed[["state", "hpop", "ownocc"]], on="state", suffixes=("_ours", "_mfed")
+        )
+        merged["delta_hpop"] = merged["hpop_ours"] - merged["hpop_mfed"]
+        merged["delta_ownocc"] = merged["owner_occ_rate"] - merged["ownocc"]
+
+        hpop_corr = merged["hpop_ours"].corr(merged["hpop_mfed"])
+        hpop_mae = merged["delta_hpop"].abs().mean()
+        ownocc_corr = merged["owner_occ_rate"].corr(merged["ownocc"])
+        ownocc_mae = merged["delta_ownocc"].abs().mean()
+
+        print("\n── Validation vs Minneapolis Fed ──")
+        print(f"  HPOP:      r={hpop_corr:.4f}, MAE={hpop_mae:.2f}pp, bias={merged['delta_hpop'].mean():+.2f}pp")
+        print(f"  Owner-Occ: r={ownocc_corr:.4f}, MAE={ownocc_mae:.2f}pp, bias={merged['delta_ownocc'].mean():+.2f}pp")
+        print(f"  Mean HPOP: ours={merged['hpop_ours'].mean():.1f}% vs Fed={merged['hpop_mfed'].mean():.1f}%")
+        print(f"  Mean OOR:  ours={merged['owner_occ_rate'].mean():.1f}% vs Fed={merged['ownocc'].mean():.1f}%")
+    except Exception as e:
+        print(f"\n── Fed validation skipped: {e} ──")
+
     # Print summary
+    print()
     print(state[["state", "hpop", "owner_occ_rate", "gap_pp", "rent_to_income", "price_to_income"]]
           .sort_values("hpop", ascending=False).to_string(index=False))
 
@@ -85,7 +114,7 @@ def main() -> pd.DataFrame:
     df = filter_housing_units(df)
     df = filter_adults(df)
     df["owner_occ"] = df[PUMS.TEN].isin(Codes.OWNER_OCCUPIED)
-    df["is_homeowner"] = df["owner_occ"] & df[PUMS.RELSHIPP].isin(Codes.HOUSEHOLDER_SPOUSE_PARTNER)
+    df["is_homeowner"] = df["owner_occ"] & df[PUMS.RELSHIPP].isin(Codes.HOMEOWNER_RELSHIPP)
 
     hu = housing[housing[PUMS.TEN].notna()].copy()
     hu["owner_occ"] = hu[PUMS.TEN].isin(Codes.OWNER_OCCUPIED)

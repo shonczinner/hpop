@@ -59,8 +59,9 @@ uv run python scripts/puma_ms_all/puma_results_to_md.py # generate PUMA results 
 
 | Metric | Correlation (r) | MAE (pp) | Mean Bias |
 |--------|-----------------|----------|-----------|
-| HPOP | 0.9972 | 1.60 | +1.60 |
+| HPOP | 1.0000 | 0.03 | -0.01 |
 | Owner-Occ | 1.0000 | 0.03 | -0.01 |
+
 
 ![Rent-to-Income vs Gap](output/gap_vs_rent_to_income.png)
 

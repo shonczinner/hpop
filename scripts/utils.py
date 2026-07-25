@@ -63,7 +63,7 @@ def filter_owners(
     """Filter to owner-occupiers (householder/spouse/partner in owner-occupied unit)."""
     return df[
         df[ten_col].isin(Codes.OWNER_OCCUPIED) &
-        df[rel_col].isin(Codes.HOUSEHOLDER_SPOUSE_PARTNER)
+        df[rel_col].isin(Codes.HOMEOWNER_RELSHIPP)
     ].copy()
 
 
@@ -106,6 +106,24 @@ def weighted_mean(
     """Compute weighted mean of value_col using weight_col."""
     w = df[weight_col]
     return (w * df[value_col]).sum() / w.sum()
+
+
+def weighted_median(
+    df: pd.DataFrame,
+    value_col: str,
+    weight_col: str = PUMS.PWGTP,
+) -> float:
+    """Compute weighted median of value_col using weight_col."""
+    df = df.dropna(subset=[value_col, weight_col])
+    if len(df) == 0:
+        return np.nan
+    sorted_idx = df[value_col].argsort()
+    sorted_values = df[value_col].iloc[sorted_idx].values
+    sorted_weights = df[weight_col].iloc[sorted_idx].values
+    cumsum = np.cumsum(sorted_weights)
+    cutoff = cumsum[-1] / 2.0
+    idx = np.searchsorted(cumsum, cutoff)
+    return float(sorted_values[min(idx, len(sorted_values) - 1)])
 
 
 def weighted_sum(
@@ -207,14 +225,15 @@ def compute_hpop_metrics(
         })
     ).reset_index()
 
-    # ── HPOP (adults in housing units, householder/spouse/partner) ──
+    # ── HPOP (all adults 18+, including group quarters in denominator) ──
+    # Per replication.md spec: numerator = adults in owner-occupied units with
+    # RELSHIPP 20-24; denominator = all adults 18+ (no GQ filter).
     df = merge_housing(person, housing, [
         PUMS.TEN, PUMS.TYPEHUGQ, PUMS.BLD,
     ])
-    df = filter_housing_units(df)
     df = filter_adults(df)
     df["owner_occ"] = df[PUMS.TEN].isin(Codes.OWNER_OCCUPIED)
-    df["is_homeowner"] = df["owner_occ"] & df[PUMS.RELSHIPP].isin(Codes.HOUSEHOLDER_SPOUSE_PARTNER)
+    df["is_homeowner"] = df["owner_occ"] & df[PUMS.RELSHIPP].isin(Codes.HOMEOWNER_RELSHIPP)
 
     hpop = df.groupby(group_col).apply(
         lambda g: pd.Series({
@@ -259,6 +278,18 @@ def compute_hpop_metrics(
             "rent_to_income_household_18_64": compute_rent_to_income(
                 g[g[PUMS.HINCP].notna() & (g[PUMS.HINCP] > 0)], income_col=PUMS.HINCP
             ),
+        })
+    ).reset_index()
+
+    # ── Median income by tenure (per replication.md spec) ──
+    tenure_income = df.groupby(group_col).apply(
+        lambda g: pd.Series({
+            "homeowner_median_income": weighted_median(
+                g[g["is_homeowner"]], PUMS.PINCP
+            ) if g["is_homeowner"].any() else np.nan,
+            "renter_median_income": weighted_median(
+                g[g[PUMS.TEN].isin(Codes.RENTER_CODES)], PUMS.PINCP
+            ) if g[PUMS.TEN].isin(Codes.RENTER_CODES).any() else np.nan,
         })
     ).reset_index()
 
@@ -325,6 +356,7 @@ def compute_hpop_metrics(
     result = hpop.merge(ownocc, on=group_col, how="outer")
     result = result.merge(rent_income, on=group_col, how="left")
     result = result.merge(rent_income_18_64, on=group_col, how="left")
+    result = result.merge(tenure_income, on=group_col, how="left")
     result = result.merge(adult_income, on=group_col, how="left")
     result = result.merge(price_income, on=group_col, how="left")
     result = result.merge(form_wide, on=group_col, how="left")
